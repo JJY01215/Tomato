@@ -8,6 +8,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from dotenv import load_dotenv
 import uuid
+from datetime import datetime
 
 # 載入 .env 檔案
 load_dotenv()
@@ -37,14 +38,14 @@ class_names = list(class_info.keys())
 # 圖片轉換與壓縮（最大 1MB）
 def convert_and_compress_image(input_path, output_path, max_size_kb=1000):
     with Image.open(input_path) as img:
-        img = img.convert('RGB')  # 強制轉成 JPEG 支援格式
+        img = img.convert('RGB')
         quality = 95
         while True:
             img.save(output_path, format='JPEG', quality=quality)
             size_kb = os.path.getsize(output_path) // 1024
             if size_kb <= max_size_kb or quality <= 30:
                 break
-            quality -= 5  # 每次遞減品質，直到小於指定大小
+            quality -= 5
 
 # 預測圖片
 def predict_image(img_path):
@@ -65,12 +66,17 @@ def index():
         if not file:
             return redirect(request.url)
 
+        # 取得當前時間
+        now = datetime.now()
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+        filename_time = now.strftime("%Y%m%d_%H%M%S")
+
         # 儲存圖片（原圖暫存）
         original_path = os.path.join(app.config['UPLOAD_FOLDER'], f"original_{uuid.uuid4().hex}.tmp")
         file.save(original_path)
 
         # 轉換為 JPEG 並壓縮
-        filename = f"{uuid.uuid4().hex}.jpg"
+        filename = f"{filename_time}_{uuid.uuid4().hex}.jpg"
         final_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         convert_and_compress_image(original_path, final_path)
 
@@ -82,16 +88,16 @@ def index():
         info = class_info[label]
 
         result_text = (
+            f"🕒 上傳時間：{timestamp}\n"
             f"🌿 狀況：{info['status']}\n"
             f"📌 原因：{info['cause']}\n"
             f"🛠️ 建議：{info['solution']}\n"
         )
 
-        # 產生 HTTPS 圖片網址
         BASE_URL = os.getenv("BASE_URL")
         image_url = f"{BASE_URL}/static/uploads/{filename}"
 
-        # 發送 LINE 訊息
+        # 傳送 LINE 訊息
         try:
             if not USER_ID:
                 print("❌ USER_ID 尚未設定，請確認 .env 檔案內容")
