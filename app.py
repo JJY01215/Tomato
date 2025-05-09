@@ -34,6 +34,18 @@ class_info = {
 }
 class_names = list(class_info.keys())
 
+# 圖片轉換與壓縮（最大 1MB）
+def convert_and_compress_image(input_path, output_path, max_size_kb=1000):
+    with Image.open(input_path) as img:
+        img = img.convert('RGB')  # 強制轉成 JPEG 支援格式
+        quality = 95
+        while True:
+            img.save(output_path, format='JPEG', quality=quality)
+            size_kb = os.path.getsize(output_path) // 1024
+            if size_kb <= max_size_kb or quality <= 30:
+                break
+            quality -= 5  # 每次遞減品質，直到小於指定大小
+
 # 預測圖片
 def predict_image(img_path):
     img = Image.open(img_path).resize((224, 224))
@@ -53,29 +65,31 @@ def index():
         if not file:
             return redirect(request.url)
 
-        # 儲存圖片
+        # 儲存圖片（原圖暫存）
+        original_path = os.path.join(app.config['UPLOAD_FOLDER'], f"original_{uuid.uuid4().hex}.tmp")
+        file.save(original_path)
+
+        # 轉換為 JPEG 並壓縮
         filename = f"{uuid.uuid4().hex}.jpg"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+        final_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        convert_and_compress_image(original_path, final_path)
+
+        # 刪除暫存檔
+        os.remove(original_path)
 
         # 預測圖片結果
-        label, confidence = predict_image(filepath)
+        label, confidence = predict_image(final_path)
         info = class_info[label]
 
         result_text = (
             f"🌿 狀況：{info['status']}\n"
             f"📌 原因：{info['cause']}\n"
             f"🛠️ 建議：{info['solution']}\n"
-            f"✅ 信心度：{confidence:.2f}"
         )
 
         # 產生 HTTPS 圖片網址
-       # 加在前面
         BASE_URL = os.getenv("BASE_URL")
-
-# 原本的 image_url = url_for(...) 改成這樣：
         image_url = f"{BASE_URL}/static/uploads/{filename}"
-
 
         # 發送 LINE 訊息
         try:
