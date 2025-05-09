@@ -1,13 +1,61 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>預測結果</title>
+    <title>辨識結果</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4c3;
+            padding: 20px;
+            margin: 0;
+        }
+        .result-container {
+            background: #ffffff;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #33691e;
+            margin-bottom: 20px;
+        }
+        img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #f1f8e9;
+            padding: 15px;
+            border-left: 4px solid #689f38;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-size: 16px;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            background: #aed581;
+            color: #1b5e20;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        a:hover {
+            background: #9ccc65;
+        }
+    </style>
 </head>
 <body>
-    <h1>預測結果</h1>
-    <p>{{ result }}</p>
-    <img src="{{ image_path }}" alt="預測圖片" style="max-width: 400px;">
-    <a href="/">回到上傳頁面</a>
+    <div class="result-container">
+        <h2>🌿 辨識結果</h2>
+        <img src="{{ image_path }}" alt="預測圖片">
+        <pre>{{ result }}</pre>
+        <a href="/">🔁 再次上傳圖片</a>
+    </div>
 </body>
 </html>
